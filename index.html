@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 PDCA Collect - Saisie Agriculteurs</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <header class="header">
+            <h1><i class="fas fa-clipboard-check"></i> PDCA Collect</h1>
+            <p class="subtitle">Système de collecte des données agricoles</p>
+        </header>
+
+        <!-- Formulaire -->
+        <section class="form-section">
+            <h2><i class="fas fa-edit"></i> Formulaire d'inscription</h2>
+            
+            <form id="agriculteurForm">
+                <div class="form-grid">
+                    <!-- Colonne 1 -->
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="nom">Nom *</label>
+                            <input type="text" id="nom" placeholder="Ex: Benmohammed" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="prenom">Prénom *</label>
+                            <input type="text" id="prenom" placeholder="Ex: Mina" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cin">CIN *</label>
+                            <input type="text" id="cin" placeholder="Ex: AB0099" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Genre *</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="genre" value="m" checked>
+                                    <span class="radio-custom"></span>
+                                    Homme (m)
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="genre" value="f">
+                                    <span class="radio-custom"></span>
+                                    Femme (f)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="date_naissance">Date de naissance *</label>
+                            <input type="text" id="date_naissance" placeholder="JJ/MM/AAAA (Ex: 03/09/1980)" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Colonne 2 -->
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="adresse">Adresse</label>
+                            <input type="text" id="adresse" placeholder="Adresse complète">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telephone">Téléphone *</label>
+                            <input type="tel" id="telephone" placeholder="Ex: 600000000" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Coordonnées</label>
+                            <div class="coords-group">
+                                <div class="coord-input">
+                                    <label for="x">X:</label>
+                                    <input type="text" id="x" placeholder="x" value="x">
+                                </div>
+                                <div class="coord-input">
+                                    <label for="y">Y:</label>
+                                    <input type="text" id="y" placeholder="y" value="y">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="commune_id">ID Commune *</label>
+                            <input type="text" id="commune_id" placeholder="Ex: 302" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="douar">Douar *</label>
+                            <input type="text" id="douar" placeholder="Ex: Douar principal" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Boutons -->
+                <div class="form-buttons">
+                    <button type="button" id="btnAjouter" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter Agriculteur
+                    </button>
+                    <button type="button" id="btnExporterCSV" class="btn btn-secondary">
+                        <i class="fas fa-file-csv"></i> Exporter CSV
+                    </button>
+                    <button type="button" id="btnExporterWord" class="btn btn-secondary" style="background-color: #2b5797;">
+                        <i class="fas fa-file-word"></i> Exporter Word
+                    </button>
+                    <button type="button" id="btnExporterPDF" class="btn btn-secondary" style="background-color: #f40f02;">
+                        <i class="fas fa-file-pdf"></i> Exporter PDF
+                    </button>
+                    <button type="button" id="btnEffacer" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Effacer Formulaire
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Liste des agriculteurs -->
+        <section class="list-section">
+            <h2><i class="fas fa-list"></i> Agriculteurs Saisis (<span id="countAgriculteurs">0</span>)</h2>
+            
+            <div class="table-container">
+                <table id="agriculteursTable">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th>CIN</th>
+                            <th>Genre</th>
+                            <th>Date Naiss.</th>
+                            <th>Téléphone</th>
+                            <th>Commune</th>
+                            <th>Douar</th>
+                            <th>Signature</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Les lignes seront ajoutées ici par JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-info">
+                <p id="tableMessage">Aucun agriculteur saisi pour le moment.</p>
+            </div>
+        </section>
+
+        <!-- Statut et informations -->
+        <footer class="footer">
+            <div class="status-bar">
+                <p id="statusMessage">
+                    <i class="fas fa-info-circle"></i> Prêt à saisir des données
+                </p>
+            </div>
+            <div class="instructions">
+                <p><i class="fas fa-lightbulb"></i> Exportez les données en CSV, Word ou PDF. Le système conserve les données hors ligne.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modale pour les messages -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle"></h3>
+            <p id="modalMessage"></p>
+            <button id="modalClose" class="btn btn-primary">OK</button>
+        </div>
+    </div>
+
+    <!-- Bibliothèques pour l'export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://unpkg.com/docx@7.7.0/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+</html>
