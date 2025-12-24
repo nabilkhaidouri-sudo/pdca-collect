@@ -44,10 +44,61 @@ body {
     opacity: 0.9;
 }
 
-/* Sections */
-.form-section, .list-section {
+/* Section sélection de type */
+.type-section {
+    padding: 15px 20px;
+    background-color: #f8fbf8;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.type-selector {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.type-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s;
+    background-color: #e0e0e0;
+    color: #555;
+    min-width: 200px;
+}
+
+.type-btn:hover {
+    background-color: #d5d5d5;
+    transform: translateY(-2px);
+}
+
+.type-active {
+    background-color: #4caf50 !important;
+    color: white !important;
+}
+
+/* Sections formulaire */
+.form-section {
     padding: 20px;
     border-bottom: 1px solid #e0e0e0;
+    display: none;
+}
+
+.form-section.active-form {
+    display: block;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 h2 {
@@ -90,16 +141,23 @@ h2 {
 }
 
 .form-group input[type="text"],
-.form-group input[type="tel"] {
+.form-group input[type="tel"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select {
     padding: 12px 15px;
     border: 2px solid #ddd;
     border-radius: 6px;
     font-size: 1rem;
     transition: border-color 0.3s;
+    background-color: white;
 }
 
 .form-group input[type="text"]:focus,
-.form-group input[type="tel"]:focus {
+.form-group input[type="tel"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="date"]:focus,
+.form-group select:focus {
     border-color: #4caf50;
     outline: none;
 }
@@ -216,23 +274,44 @@ h2 {
     transform: translateY(-2px);
 }
 
+/* Sections liste */
+.list-section {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: none;
+}
+
+.list-section.active-list {
+    display: block;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
 /* Tableau */
 .table-container {
     overflow-x: auto;
     margin-bottom: 15px;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px;
+    min-width: 800px;
+}
+
+#cooperativesTable {
+    min-width: 1200px;
 }
 
 thead {
     background-color: #2e7d32;
     color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 th {
@@ -260,18 +339,20 @@ tbody tr:nth-child(even):hover {
 
 td {
     padding: 12px;
+    vertical-align: middle;
 }
 
-/* Badge de signature */
-.signature-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    background-color: #e3f2fd;
-    color: #1565c0;
-    border-radius: 4px;
-    font-family: monospace;
-    font-weight: bold;
-    font-size: 0.9rem;
+/* Largeur fixe pour les colonnes d'action */
+#agriculteursTable th:last-child,
+#agriculteursTable td:last-child {
+    width: 120px;
+    text-align: center;
+}
+
+#cooperativesTable th:last-child,
+#cooperativesTable td:last-child {
+    width: 120px;
+    text-align: center;
 }
 
 .action-btn {
@@ -282,11 +363,16 @@ td {
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
 }
 
 .action-btn:hover {
     background-color: #f57c00;
+    transform: scale(1.05);
 }
 
 .table-info {
@@ -294,6 +380,9 @@ td {
     padding: 15px;
     color: #666;
     font-style: italic;
+    background-color: #f8fbf8;
+    border-radius: 6px;
+    margin-top: 10px;
 }
 
 /* Footer */
@@ -313,6 +402,10 @@ td {
     gap: 10px;
 }
 
+.status-bar i {
+    font-size: 1.2rem;
+}
+
 .instructions {
     background-color: #e8f5e9;
     padding: 15px;
@@ -324,6 +417,12 @@ td {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin: 0;
+}
+
+.instructions i {
+    color: #ff9800;
+    font-size: 1.2rem;
 }
 
 /* Modal */
@@ -353,17 +452,128 @@ td {
 .modal-content h3 {
     color: #2e7d32;
     margin-bottom: 15px;
+    font-size: 1.5rem;
 }
 
 .modal-content p {
     margin-bottom: 25px;
     line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+/* Style pour les champs obligatoires */
+.form-group label[for*="nom"],
+.form-group label[for*="prenom"],
+.form-group label[for*="cin"],
+.form-group label[for*="date"],
+.form-group label[for*="telephone"],
+.form-group label[for*="commune"],
+.form-group label[for*="douar"],
+.form-group label[for*="adherents"],
+.form-group label[for*="president"],
+.form-group label[for*="filiere"] {
+    position: relative;
+}
+
+.form-group label[for*="nom"]::before,
+.form-group label[for*="prenom"]::before,
+.form-group label[for*="cin"]::before,
+.form-group label[for*="date"]::before,
+.form-group label[for*="telephone"]::before,
+.form-group label[for*="commune"]::before,
+.form-group label[for*="douar"]::before,
+.form-group label[for*="adherents"]::before,
+.form-group label[for*="president"]::before,
+.form-group label[for*="filiere"]::before {
+    content: "*";
+    color: #f44336;
+    margin-right: 4px;
+    font-weight: bold;
+}
+
+/* Style pour les indicateurs de genre dans le tableau */
+td:nth-child(4), td:nth-child(10) {
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Animation pour les nouveaux éléments */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+tbody tr {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Scrollbar personnalisée */
+.table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+    .container {
+        margin: 10px;
+        border-radius: 8px;
+    }
+    
     .form-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+    }
+    
+    .container {
+        margin: 5px;
+        border-radius: 6px;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .type-selector {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .type-btn {
+        width: 100%;
+        min-width: auto;
+        padding: 10px 15px;
     }
     
     .form-buttons {
@@ -373,6 +583,7 @@ td {
     .btn {
         width: 100%;
         min-width: auto;
+        padding: 10px 15px;
     }
     
     .coords-group {
@@ -380,26 +591,62 @@ td {
         gap: 10px;
     }
     
-    .header h1 {
-        font-size: 1.8rem;
-    }
-    
     h2 {
         font-size: 1.3rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .table-container {
+        max-height: 300px;
+    }
+    
+    .status-bar {
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+    
+    .instructions p {
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
     }
 }
 
 @media (max-width: 480px) {
-    .container {
-        padding: 0;
+    .header {
+        padding: 15px 10px;
     }
     
-    .form-section, .list-section, .footer {
-        padding: 15px;
+    .form-section, .list-section {
+        padding: 15px 10px;
+    }
+    
+    .footer {
+        padding: 15px 10px;
     }
     
     th, td {
         padding: 8px 6px;
         font-size: 0.9rem;
+    }
+    
+    .action-btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .modal-content {
+        padding: 20px 15px;
+    }
+    
+    .modal-content h3 {
+        font-size: 1.3rem;
+    }
+    
+    .modal-content p {
+        font-size: 1rem;
     }
 }
