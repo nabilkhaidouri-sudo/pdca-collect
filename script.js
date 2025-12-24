@@ -1,22 +1,45 @@
-// Application PDCA Collect - Gestion des agriculteurs
+// Application PDCA Collect - Gestion Agriculteurs & Coopératives
 document.addEventListener('DOMContentLoaded', function() {
     // Variables globales
     let agriculteurs = [];
+    let cooperatives = [];
     let editIndex = -1;
+    let editIndexCoop = -1;
+    let currentMode = 'agriculteur'; // 'agriculteur' ou 'cooperative'
     
     // Éléments du DOM
-    const form = document.getElementById('agriculteurForm');
-    const tableBody = document.getElementById('tableBody');
-    const countSpan = document.getElementById('countAgriculteurs');
-    const tableMessage = document.getElementById('tableMessage');
+    const formAgriculteur = document.getElementById('formAgriculteur');
+    const formCooperative = document.getElementById('formCooperative');
+    const listAgriculteur = document.getElementById('listAgriculteur');
+    const listCooperative = document.getElementById('listCooperative');
+    
+    const tableBodyAgriculteurs = document.getElementById('tableBodyAgriculteurs');
+    const tableBodyCooperatives = document.getElementById('tableBodyCooperatives');
+    
+    const countAgriculteurs = document.getElementById('countAgriculteurs');
+    const countCooperatives = document.getElementById('countCooperatives');
+    
+    const tableMessageAgriculteurs = document.getElementById('tableMessageAgriculteurs');
+    const tableMessageCooperatives = document.getElementById('tableMessageCooperatives');
     const statusMessage = document.getElementById('statusMessage');
     
-    // Boutons
-    const btnAjouter = document.getElementById('btnAjouter');
-    const btnExporterCSV = document.getElementById('btnExporterCSV');
-    const btnExporterWord = document.getElementById('btnExporterWord');
-    const btnExporterPDF = document.getElementById('btnExporterPDF');
-    const btnEffacer = document.getElementById('btnEffacer');
+    // Boutons de sélection
+    const btnAgriculteur = document.getElementById('btnAgriculteur');
+    const btnCooperative = document.getElementById('btnCooperative');
+    
+    // Boutons Agriculteur
+    const btnAjouterAgriculteur = document.getElementById('btnAjouterAgriculteur');
+    const btnExporterCSVAgriculteur = document.getElementById('btnExporterCSVAgriculteur');
+    const btnExporterWordAgriculteur = document.getElementById('btnExporterWordAgriculteur');
+    const btnExporterPDFAgriculteur = document.getElementById('btnExporterPDFAgriculteur');
+    const btnEffacerAgriculteur = document.getElementById('btnEffacerAgriculteur');
+    
+    // Boutons Coopérative
+    const btnAjouterCooperative = document.getElementById('btnAjouterCooperative');
+    const btnExporterCSVCooperative = document.getElementById('btnExporterCSVCooperative');
+    const btnExporterWordCooperative = document.getElementById('btnExporterWordCooperative');
+    const btnExporterPDFCooperative = document.getElementById('btnExporterPDFCooperative');
+    const btnEffacerCooperative = document.getElementById('btnEffacerCooperative');
     
     // Modal
     const modal = document.getElementById('messageModal');
@@ -27,29 +50,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialiser jsPDF
     const { jsPDF } = window.jspdf;
     
-    // Charger les données depuis le localStorage
-    function chargerDonnees() {
-        const donneesSauvegardees = localStorage.getItem('pdcaCollectAgriculteurs');
-        if (donneesSauvegardees) {
-            try {
-                agriculteurs = JSON.parse(donneesSauvegardees);
-                mettreAJourTableau();
-                mettreAJourStatut(`${agriculteurs.length} agriculteurs chargés`);
-            } catch (e) {
-                console.error('Erreur lors du chargement des données:', e);
-                afficherMessage('Erreur', 'Impossible de charger les données sauvegardées.');
-            }
-        }
-    }
-    
-    // Valider la date au format JJ/MM/AAAA
+    // Fonctions utilitaires
     function validerDate(dateStr) {
         const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/;
         if (!regex.test(dateStr)) {
             return false;
         }
         
-        // Vérification plus poussée
         const parts = dateStr.split('/');
         const jour = parseInt(parts[0], 10);
         const mois = parseInt(parts[1], 10);
@@ -61,8 +68,73 @@ document.addEventListener('DOMContentLoaded', function() {
                date.getFullYear() === annee;
     }
     
-    // Valider le formulaire
-    function validerFormulaire() {
+    function afficherMessage(titre, message) {
+        modalTitle.textContent = titre;
+        modalMessage.textContent = message;
+        modal.style.display = 'flex';
+        mettreAJourStatut(titre);
+    }
+    
+    function mettreAJourStatut(message) {
+        const total = agriculteurs.length + cooperatives.length;
+        statusMessage.innerHTML = `<i class="fas fa-info-circle"></i> ${message} - ${agriculteurs.length} agriculteurs, ${cooperatives.length} coopératives`;
+    }
+    
+    // Sauvegarde dans localStorage
+    function sauvegarderDonnees() {
+        localStorage.setItem('pdcaAgriculteurs', JSON.stringify(agriculteurs));
+        localStorage.setItem('pdcaCooperatives', JSON.stringify(cooperatives));
+    }
+    
+    function chargerDonnees() {
+        // Charger agriculteurs
+        const agriculteursSauvegardes = localStorage.getItem('pdcaAgriculteurs');
+        if (agriculteursSauvegardes) {
+            try {
+                agriculteurs = JSON.parse(agriculteursSauvegardes);
+                mettreAJourTableauAgriculteurs();
+            } catch (e) {
+                console.error('Erreur chargement agriculteurs:', e);
+            }
+        }
+        
+        // Charger coopératives
+        const cooperativesSauvegardes = localStorage.getItem('pdcaCooperatives');
+        if (cooperativesSauvegardes) {
+            try {
+                cooperatives = JSON.parse(cooperativesSauvegardes);
+                mettreAJourTableauCooperatives();
+            } catch (e) {
+                console.error('Erreur chargement coopératives:', e);
+            }
+        }
+        
+        mettreAJourStatut('Données chargées');
+    }
+    
+    // Gestion du mode (agriculteur/coopérative)
+    function changerMode(mode) {
+        currentMode = mode;
+        
+        if (mode === 'agriculteur') {
+            formAgriculteur.classList.add('active-form');
+            formCooperative.classList.remove('active-form');
+            listAgriculteur.classList.add('active-list');
+            listCooperative.classList.remove('active-list');
+            btnAgriculteur.classList.add('type-active');
+            btnCooperative.classList.remove('type-active');
+        } else {
+            formAgriculteur.classList.remove('active-form');
+            formCooperative.classList.add('active-form');
+            listAgriculteur.classList.remove('active-list');
+            listCooperative.classList.add('active-list');
+            btnAgriculteur.classList.remove('type-active');
+            btnCooperative.classList.add('type-active');
+        }
+    }
+    
+    // === GESTION DES AGRICULTEURS ===
+    function validerFormulaireAgriculteur() {
         const nom = document.getElementById('nom').value.trim();
         const prenom = document.getElementById('prenom').value.trim();
         const cin = document.getElementById('cin').value.trim();
@@ -71,13 +143,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const communeId = document.getElementById('commune_id').value.trim();
         const douar = document.getElementById('douar').value.trim();
         
-        // Vérifier les champs obligatoires
         if (!nom || !prenom || !cin || !dateNaissance || !telephone || !communeId || !douar) {
             afficherMessage('Champs manquants', 'Veuillez remplir tous les champs obligatoires (*).');
             return false;
         }
         
-        // Valider la date
         if (!validerDate(dateNaissance)) {
             afficherMessage('Date invalide', 'Le format de date doit être JJ/MM/AAAA (ex: 03/09/1980).');
             return false;
@@ -86,19 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    // Générer un code de signature aléatoire
-    function genererSignature() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = '';
-        for (let i = 0; i < 8; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    }
-    
-    // Ajouter un agriculteur
     function ajouterAgriculteur() {
-        if (!validerFormulaire()) {
+        if (!validerFormulaireAgriculteur()) {
             return;
         }
         
@@ -114,93 +173,69 @@ document.addEventListener('DOMContentLoaded', function() {
             y: document.getElementById('y').value.trim() || 'y',
             commune_id: document.getElementById('commune_id').value.trim(),
             douar: document.getElementById('douar').value.trim(),
-            signature: genererSignature() // Ajout de la signature
+            signature: '' // Signature vide
         };
         
         if (editIndex === -1) {
-            // Ajouter un nouvel agriculteur
             agriculteurs.push(agriculteur);
-            afficherMessage('Succès', `Agriculteur ${agriculteur.prenom} ${agriculteur.nom} ajouté avec succès.`);
+            afficherMessage('Succès', `Agriculteur ${agriculteur.prenom} ${agriculteur.nom} ajouté.`);
         } else {
-            // Modifier un agriculteur existant
             agriculteurs[editIndex] = agriculteur;
             editIndex = -1;
-            btnAjouter.innerHTML = '<i class="fas fa-plus"></i> Ajouter Agriculteur';
-            afficherMessage('Succès', `Agriculteur ${agriculteur.prenom} ${agriculteur.nom} modifié avec succès.`);
+            btnAjouterAgriculteur.innerHTML = '<i class="fas fa-plus"></i> Ajouter Agriculteur';
+            afficherMessage('Succès', `Agriculteur ${agriculteur.prenom} ${agriculteur.nom} modifié.`);
         }
         
-        // Sauvegarder dans le localStorage
         sauvegarderDonnees();
-        
-        // Mettre à jour l'affichage
-        mettreAJourTableau();
-        effacerFormulaire();
+        mettreAJourTableauAgriculteurs();
+        effacerFormulaireAgriculteur();
     }
     
-    // Modifier un agriculteur
     function modifierAgriculteur(index) {
         const agriculteur = agriculteurs[index];
         
-        // Remplir le formulaire avec les données
         document.getElementById('nom').value = agriculteur.nom;
         document.getElementById('prenom').value = agriculteur.prenom;
         document.getElementById('cin').value = agriculteur.cin;
         
-        // Sélectionner le bon genre
         const genreRadio = document.querySelector(`input[name="genre"][value="${agriculteur.genre}"]`);
         if (genreRadio) genreRadio.checked = true;
         
         document.getElementById('date_naissance').value = agriculteur.date_naissance;
-        document.getElementById('adresse').value = agriculteur.adresse;
+        document.getElementById('adresse').value = agriculteur.adresse || '';
         document.getElementById('telephone').value = agriculteur.telephone;
         document.getElementById('x').value = agriculteur.x;
         document.getElementById('y').value = agriculteur.y;
         document.getElementById('commune_id').value = agriculteur.commune_id;
         document.getElementById('douar').value = agriculteur.douar;
         
-        // Changer le texte du bouton
         editIndex = index;
-        btnAjouter.innerHTML = '<i class="fas fa-save"></i> Enregistrer les modifications';
-        
-        // Faire défiler vers le formulaire
-        document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
-        
-        mettreAJourStatut('Modification en cours');
+        btnAjouterAgriculteur.innerHTML = '<i class="fas fa-save"></i> Enregistrer modifications';
+        changerMode('agriculteur');
     }
     
-    // Supprimer un agriculteur
     function supprimerAgriculteur(index) {
-        if (confirm(`Voulez-vous vraiment supprimer ${agriculteurs[index].prenom} ${agriculteurs[index].nom} ?`)) {
-            const nomSupprime = agriculteurs[index].prenom + ' ' + agriculteurs[index].nom;
+        if (confirm(`Supprimer ${agriculteurs[index].prenom} ${agriculteurs[index].nom} ?`)) {
             agriculteurs.splice(index, 1);
-            
-            // Sauvegarder les modifications
             sauvegarderDonnees();
-            
-            // Mettre à jour l'affichage
-            mettreAJourTableau();
-            
-            afficherMessage('Supprimé', `Agriculteur ${nomSupprime} supprimé.`);
+            mettreAJourTableauAgriculteurs();
+            afficherMessage('Supprimé', 'Agriculteur supprimé.');
         }
     }
     
-    // Mettre à jour le tableau
-    function mettreAJourTableau() {
-        tableBody.innerHTML = '';
+    function mettreAJourTableauAgriculteurs() {
+        tableBodyAgriculteurs.innerHTML = '';
+        countAgriculteurs.textContent = agriculteurs.length;
         
         if (agriculteurs.length === 0) {
-            tableMessage.textContent = 'Aucun agriculteur saisi pour le moment.';
-            countSpan.textContent = '0';
+            tableMessageAgriculteurs.textContent = 'Aucun agriculteur saisi.';
             return;
         }
         
-        tableMessage.textContent = '';
-        countSpan.textContent = agriculteurs.length;
+        tableMessageAgriculteurs.textContent = '';
         
         agriculteurs.forEach((agriculteur, index) => {
             const row = document.createElement('tr');
-            
-            // Icône de genre
             const genreIcon = agriculteur.genre === 'm' ? '♂️' : '♀️';
             
             row.innerHTML = `
@@ -212,45 +247,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${agriculteur.telephone}</td>
                 <td>${agriculteur.commune_id}</td>
                 <td>${agriculteur.douar}</td>
-                <td><span class="signature-badge">${agriculteur.signature || 'N/A'}</span></td>
                 <td>
-                    <button onclick="app.modifier(${index})" class="action-btn" title="Modifier">
+                    <button onclick="app.modifierAgriculteur(${index})" class="action-btn" title="Modifier">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button onclick="app.supprimer(${index})" class="action-btn" style="background-color: #f44336; margin-left: 5px;" title="Supprimer">
+                    <button onclick="app.supprimerAgriculteur(${index})" class="action-btn" style="background-color: #f44336; margin-left: 5px;" title="Supprimer">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
             
-            tableBody.appendChild(row);
+            tableBodyAgriculteurs.appendChild(row);
         });
     }
     
-    // Effacer le formulaire
-    function effacerFormulaire() {
-        form.reset();
+    function effacerFormulaireAgriculteur() {
+        document.getElementById('agriculteurForm').reset();
         document.getElementById('x').value = 'x';
         document.getElementById('y').value = 'y';
-        
-        // Réinitialiser le mode édition
         editIndex = -1;
-        btnAjouter.innerHTML = '<i class="fas fa-plus"></i> Ajouter Agriculteur';
-        
-        mettreAJourStatut('Formulaire effacé');
+        btnAjouterAgriculteur.innerHTML = '<i class="fas fa-plus"></i> Ajouter Agriculteur';
+        mettreAJourStatut('Formulaire agriculteur effacé');
     }
     
-    // Exporter en CSV
-    function exporterCSV() {
+    function exporterCSVAgriculteur() {
         if (agriculteurs.length === 0) {
             afficherMessage('Export impossible', 'Aucun agriculteur à exporter.');
             return;
         }
         
-        // En-têtes CSV avec signature
-        const headers = ['Nom', 'Prénom', 'CIN', 'Genre', 'Date de naissance', 'Adresse', 'Téléphone', 'Commune', 'Douar', 'Signature'];
+        // En-têtes selon exemple.csv
+        const headers = ['nom', 'prenom', 'cin', 'genre', 'date_naissance', 'adresse', 'telephone', 'x', 'y', 'commune_id', 'douar'];
         
-        // Créer les lignes CSV
         let csvContent = headers.join(';') + '\n';
         
         agriculteurs.forEach(agriculteur => {
@@ -258,24 +286,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 agriculteur.nom,
                 agriculteur.prenom,
                 agriculteur.cin,
-                agriculteur.genre === 'm' ? 'Homme' : 'Femme',
+                agriculteur.genre,
                 agriculteur.date_naissance,
                 agriculteur.adresse || '',
                 agriculteur.telephone,
+                agriculteur.x,
+                agriculteur.y,
                 agriculteur.commune_id,
-                agriculteur.douar,
-                agriculteur.signature || ''
+                agriculteur.douar
             ].map(value => `"${value}"`).join(';');
             
             csvContent += row + '\n';
         });
         
-        // Créer un blob et télécharger
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         
-        // Nom du fichier avec date
         const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
         link.setAttribute('href', url);
         link.setAttribute('download', `agriculteurs_pdca_${date}.csv`);
@@ -285,12 +312,10 @@ document.addEventListener('DOMContentLoaded', function() {
         link.click();
         document.body.removeChild(link);
         
-        afficherMessage('Export CSV réussi', `${agriculteurs.length} agriculteurs exportés dans le fichier CSV.`);
-        mettreAJourStatut('Données exportées en CSV');
+        afficherMessage('Export CSV réussi', `${agriculteurs.length} agriculteurs exportés.`);
     }
     
-    // Exporter en Word
-    async function exporterWord() {
+    async function exporterWordAgriculteur() {
         if (agriculteurs.length === 0) {
             afficherMessage('Export impossible', 'Aucun agriculteur à exporter.');
             return;
@@ -299,7 +324,6 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, HeadingLevel } = window.docx;
             
-            // Créer un nouveau document
             const doc = new Document({
                 sections: [{
                     properties: {},
@@ -313,11 +337,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             text: `Généré le ${new Date().toLocaleDateString('fr-FR')} - ${agriculteurs.length} agriculteurs`,
                             spacing: { after: 400 }
                         }),
-                        // Tableau des données
                         new Table({
                             width: { size: 100, type: WidthType.PERCENTAGE },
                             rows: [
-                                // En-têtes
                                 new TableRow({
                                     children: [
                                         'Nom', 'Prénom', 'CIN', 'Genre', 'Date Naiss.', 'Téléphone', 'Commune', 'Douar', 'Signature'
@@ -326,7 +348,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                         shading: { fill: "E0E0E0" }
                                     }))
                                 }),
-                                // Données
                                 ...agriculteurs.map(agriculteur => new TableRow({
                                     children: [
                                         agriculteur.nom,
@@ -337,43 +358,30 @@ document.addEventListener('DOMContentLoaded', function() {
                                         agriculteur.telephone,
                                         agriculteur.commune_id,
                                         agriculteur.douar,
-                                        agriculteur.signature || ''
+                                        '___________________' // Signature vide pour manuscrite
                                     ].map(text => new TableCell({
                                         children: [new Paragraph(text)]
                                     }))
                                 }))
                             ]
-                        }),
-                        new Paragraph({
-                            text: " ",
-                            spacing: { before: 400 }
-                        }),
-                        new Paragraph({
-                            text: "Document généré automatiquement par PDCA Collect",
-                            italics: true
                         })
                     ]
                 }]
             });
             
-            // Générer le document
             const blob = await Packer.toBlob(doc);
-            
-            // Télécharger
             const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             saveAs(blob, `agriculteurs_pdca_${date}.docx`);
             
-            afficherMessage('Export Word réussi', `${agriculteurs.length} agriculteurs exportés dans le fichier Word.`);
-            mettreAJourStatut('Données exportées en Word');
+            afficherMessage('Export Word réussi', `${agriculteurs.length} agriculteurs exportés.`);
             
         } catch (error) {
-            console.error('Erreur lors de l\'export Word:', error);
-            afficherMessage('Erreur', 'Impossible d\'exporter en Word. Vérifiez votre connexion.');
+            console.error('Erreur export Word:', error);
+            afficherMessage('Erreur', 'Impossible d\'exporter en Word.');
         }
     }
     
-    // Exporter en PDF
-    function exporterPDF() {
+    function exporterPDFAgriculteur() {
         if (agriculteurs.length === 0) {
             afficherMessage('Export impossible', 'Aucun agriculteur à exporter.');
             return;
@@ -382,17 +390,14 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const doc = new jsPDF();
             
-            // Titre
             doc.setFontSize(18);
-            doc.setTextColor(46, 125, 50); // Couleur verte PDCA
+            doc.setTextColor(46, 125, 50);
             doc.text("Liste des Agriculteurs - PDCA Collect", 105, 20, { align: 'center' });
             
-            // Sous-titre
             doc.setFontSize(11);
             doc.setTextColor(100, 100, 100);
             doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} - ${agriculteurs.length} agriculteurs`, 105, 30, { align: 'center' });
             
-            // Préparer les données pour le tableau
             const tableData = agriculteurs.map(agriculteur => [
                 agriculteur.nom,
                 agriculteur.prenom,
@@ -402,38 +407,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 agriculteur.telephone,
                 agriculteur.commune_id,
                 agriculteur.douar,
-                agriculteur.signature || ''
+                '___________________' // Signature vide pour manuscrite
             ]);
             
-            // En-têtes du tableau
             const headers = [['Nom', 'Prénom', 'CIN', 'Genre', 'Date Naiss.', 'Téléphone', 'Commune', 'Douar', 'Signature']];
             
-            // Options du tableau
-            const options = {
+            doc.autoTable({
                 startY: 40,
                 head: headers,
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [46, 125, 50] },
                 styles: { fontSize: 9, cellPadding: 3 },
-                columnStyles: {
-                    0: { cellWidth: 25 },
-                    1: { cellWidth: 25 },
-                    2: { cellWidth: 20 },
-                    3: { cellWidth: 15 },
-                    4: { cellWidth: 25 },
-                    5: { cellWidth: 25 },
-                    6: { cellWidth: 20 },
-                    7: { cellWidth: 25 },
-                    8: { cellWidth: 20 }
-                },
                 margin: { left: 10, right: 10 }
-            };
+            });
             
-            // Ajouter le tableau
-            doc.autoTable(options);
-            
-            // Pied de page
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
@@ -442,65 +430,372 @@ document.addEventListener('DOMContentLoaded', function() {
                 doc.text(`Page ${i} sur ${pageCount} - PDCA Collect`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
             }
             
-            // Sauvegarder le PDF
             const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             doc.save(`agriculteurs_pdca_${date}.pdf`);
             
-            afficherMessage('Export PDF réussi', `${agriculteurs.length} agriculteurs exportés dans le fichier PDF.`);
-            mettreAJourStatut('Données exportées en PDF');
+            afficherMessage('Export PDF réussi', `${agriculteurs.length} agriculteurs exportés.`);
             
         } catch (error) {
-            console.error('Erreur lors de l\'export PDF:', error);
+            console.error('Erreur export PDF:', error);
             afficherMessage('Erreur', 'Impossible d\'exporter en PDF.');
         }
     }
     
-    // Sauvegarder dans le localStorage
-    function sauvegarderDonnees() {
-        localStorage.setItem('pdcaCollectAgriculteurs', JSON.stringify(agriculteurs));
-    }
-    
-    // Mettre à jour le statut
-    function mettreAJourStatut(message) {
-        statusMessage.innerHTML = `<i class="fas fa-info-circle"></i> ${message} - ${agriculteurs.length} agriculteurs enregistrés`;
-    }
-    
-    // Afficher un message dans la modal
-    function afficherMessage(titre, message) {
-        modalTitle.textContent = titre;
-        modalMessage.textContent = message;
-        modal.style.display = 'flex';
+    // === GESTION DES COOPÉRATIVES ===
+    function validerFormulaireCooperative() {
+        const nom_cooperative = document.getElementById('nom_cooperative').value.trim();
+        const nom_president = document.getElementById('nom_president').value.trim();
+        const nombre_adherents = document.getElementById('nombre_adherents').value.trim();
+        const dateCreation = document.getElementById('dateCreation').value.trim();
+        const tel_president = document.getElementById('tel_president').value.trim();
+        const commune_id = document.getElementById('commune_id_coop').value.trim();
+        const filiere = document.getElementById('filiere').value.trim();
         
-        mettreAJourStatut(titre);
+        if (!nom_cooperative || !nom_president || !nombre_adherents || !dateCreation || !tel_president || !commune_id || !filiere) {
+            afficherMessage('Champs manquants', 'Veuillez remplir tous les champs obligatoires (*).');
+            return false;
+        }
+        
+        if (!validerDate(dateCreation)) {
+            afficherMessage('Date invalide', 'Le format de date doit être JJ/MM/AAAA.');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function ajouterCooperative() {
+        if (!validerFormulaireCooperative()) {
+            return;
+        }
+        
+        const cooperative = {
+            nom_cooperative: document.getElementById('nom_cooperative').value.trim(),
+            nom_president: document.getElementById('nom_president').value.trim(),
+            nombre_adherents: document.getElementById('nombre_adherents').value.trim(),
+            dateCreation: document.getElementById('dateCreation').value.trim(),
+            fax_cooperative: document.getElementById('fax_cooperative').value.trim(),
+            tel_president: document.getElementById('tel_president').value.trim(),
+            fonctionnelle: document.getElementById('fonctionnelle').value,
+            conformite_loi_112_12: document.getElementById('conformite_loi_112_12').value,
+            commune_id: document.getElementById('commune_id_coop').value.trim(),
+            genre: document.querySelector('input[name="genre_coop"]:checked').value,
+            filiere: document.getElementById('filiere').value.trim(),
+            signature: '' // Signature vide
+        };
+        
+        if (editIndexCoop === -1) {
+            cooperatives.push(cooperative);
+            afficherMessage('Succès', `Coopérative ${cooperative.nom_cooperative} ajoutée.`);
+        } else {
+            cooperatives[editIndexCoop] = cooperative;
+            editIndexCoop = -1;
+            btnAjouterCooperative.innerHTML = '<i class="fas fa-plus"></i> Ajouter Coopérative';
+            afficherMessage('Succès', `Coopérative ${cooperative.nom_cooperative} modifiée.`);
+        }
+        
+        sauvegarderDonnees();
+        mettreAJourTableauCooperatives();
+        effacerFormulaireCooperative();
+    }
+    
+    function modifierCooperative(index) {
+        const cooperative = cooperatives[index];
+        
+        document.getElementById('nom_cooperative').value = cooperative.nom_cooperative;
+        document.getElementById('nom_president').value = cooperative.nom_president;
+        document.getElementById('nombre_adherents').value = cooperative.nombre_adherents;
+        document.getElementById('dateCreation').value = cooperative.dateCreation;
+        document.getElementById('fax_cooperative').value = cooperative.fax_cooperative || '';
+        document.getElementById('tel_president').value = cooperative.tel_president;
+        document.getElementById('fonctionnelle').value = cooperative.fonctionnelle;
+        document.getElementById('conformite_loi_112_12').value = cooperative.conformite_loi_112_12;
+        document.getElementById('commune_id_coop').value = cooperative.commune_id;
+        document.getElementById('filiere').value = cooperative.filiere;
+        
+        const genreRadio = document.querySelector(`input[name="genre_coop"][value="${cooperative.genre}"]`);
+        if (genreRadio) genreRadio.checked = true;
+        
+        editIndexCoop = index;
+        btnAjouterCooperative.innerHTML = '<i class="fas fa-save"></i> Enregistrer modifications';
+        changerMode('cooperative');
+    }
+    
+    function supprimerCooperative(index) {
+        if (confirm(`Supprimer ${cooperatives[index].nom_cooperative} ?`)) {
+            cooperatives.splice(index, 1);
+            sauvegarderDonnees();
+            mettreAJourTableauCooperatives();
+            afficherMessage('Supprimé', 'Coopérative supprimée.');
+        }
+    }
+    
+    function mettreAJourTableauCooperatives() {
+        tableBodyCooperatives.innerHTML = '';
+        countCooperatives.textContent = cooperatives.length;
+        
+        if (cooperatives.length === 0) {
+            tableMessageCooperatives.textContent = 'Aucune coopérative saisie.';
+            return;
+        }
+        
+        tableMessageCooperatives.textContent = '';
+        
+        cooperatives.forEach((cooperative, index) => {
+            const row = document.createElement('tr');
+            const genreIcon = cooperative.genre === 'm' ? '♂️' : '♀️';
+            
+            row.innerHTML = `
+                <td>${cooperative.nom_cooperative}</td>
+                <td>${cooperative.nom_president}</td>
+                <td>${cooperative.nombre_adherents}</td>
+                <td>${cooperative.dateCreation}</td>
+                <td>${cooperative.fax_cooperative || ''}</td>
+                <td>${cooperative.tel_president}</td>
+                <td>${cooperative.fonctionnelle}</td>
+                <td>${cooperative.conformite_loi_112_12}</td>
+                <td>${cooperative.commune_id}</td>
+                <td>${genreIcon} (${cooperative.genre})</td>
+                <td>${cooperative.filiere}</td>
+                <td>
+                    <button onclick="app.modifierCooperative(${index})" class="action-btn" title="Modifier">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="app.supprimerCooperative(${index})" class="action-btn" style="background-color: #f44336; margin-left: 5px;" title="Supprimer">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tableBodyCooperatives.appendChild(row);
+        });
+    }
+    
+    function effacerFormulaireCooperative() {
+        document.getElementById('cooperativeForm').reset();
+        editIndexCoop = -1;
+        btnAjouterCooperative.innerHTML = '<i class="fas fa-plus"></i> Ajouter Coopérative';
+        mettreAJourStatut('Formulaire coopérative effacé');
+    }
+    
+    function exporterCSVCooperative() {
+        if (cooperatives.length === 0) {
+            afficherMessage('Export impossible', 'Aucune coopérative à exporter.');
+            return;
+        }
+        
+        // En-têtes selon exemple_cooperative.csv
+        const headers = ['nom_cooperative', 'nom_president', 'nombre_adherents', 'dateCreation', 'fax_cooperative', 'tel_president', 'fonctionnelle', 'conformite_loi_112_12', 'commune_id', 'genre', 'filiere'];
+        
+        let csvContent = headers.join(';') + '\n';
+        
+        cooperatives.forEach(cooperative => {
+            const row = [
+                cooperative.nom_cooperative,
+                cooperative.nom_president,
+                cooperative.nombre_adherents,
+                cooperative.dateCreation,
+                cooperative.fax_cooperative || '',
+                cooperative.tel_president,
+                cooperative.fonctionnelle,
+                cooperative.conformite_loi_112_12,
+                cooperative.commune_id,
+                cooperative.genre,
+                cooperative.filiere
+            ].map(value => `"${value}"`).join(';');
+            
+            csvContent += row + '\n';
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `cooperatives_pdca_${date}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        afficherMessage('Export CSV réussi', `${cooperatives.length} coopératives exportées.`);
+    }
+    
+    async function exporterWordCooperative() {
+        if (cooperatives.length === 0) {
+            afficherMessage('Export impossible', 'Aucune coopérative à exporter.');
+            return;
+        }
+        
+        try {
+            const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, HeadingLevel } = window.docx;
+            
+            const doc = new Document({
+                sections: [{
+                    properties: {},
+                    children: [
+                        new Paragraph({
+                            text: "Liste des Coopératives Agricoles - PDCA Collect",
+                            heading: HeadingLevel.HEADING_1,
+                            spacing: { after: 200 }
+                        }),
+                        new Paragraph({
+                            text: `Généré le ${new Date().toLocaleDateString('fr-FR')} - ${cooperatives.length} coopératives`,
+                            spacing: { after: 400 }
+                        }),
+                        new Table({
+                            width: { size: 100, type: WidthType.PERCENTAGE },
+                            rows: [
+                                new TableRow({
+                                    children: [
+                                        'Nom Coop', 'Président', 'Adhérents', 'Date Création', 'Fax', 'Tél Président', 
+                                        'Fonctionnelle', 'Conformité Loi', 'Commune ID', 'Genre', 'Filière', 'Signature'
+                                    ].map(text => new TableCell({
+                                        children: [new Paragraph({ text, bold: true })],
+                                        shading: { fill: "E0E0E0" }
+                                    }))
+                                }),
+                                ...cooperatives.map(cooperative => new TableRow({
+                                    children: [
+                                        cooperative.nom_cooperative,
+                                        cooperative.nom_president,
+                                        cooperative.nombre_adherents,
+                                        cooperative.dateCreation,
+                                        cooperative.fax_cooperative || '',
+                                        cooperative.tel_president,
+                                        cooperative.fonctionnelle,
+                                        cooperative.conformite_loi_112_12,
+                                        cooperative.commune_id,
+                                        cooperative.genre === 'm' ? 'Homme' : 'Femme',
+                                        cooperative.filiere,
+                                        '___________________' // Signature vide pour manuscrite
+                                    ].map(text => new TableCell({
+                                        children: [new Paragraph(text)]
+                                    }))
+                                }))
+                            ]
+                        })
+                    ]
+                }]
+            });
+            
+            const blob = await Packer.toBlob(doc);
+            const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            saveAs(blob, `cooperatives_pdca_${date}.docx`);
+            
+            afficherMessage('Export Word réussi', `${cooperatives.length} coopératives exportées.`);
+            
+        } catch (error) {
+            console.error('Erreur export Word:', error);
+            afficherMessage('Erreur', 'Impossible d\'exporter en Word.');
+        }
+    }
+    
+    function exporterPDFCooperative() {
+        if (cooperatives.length === 0) {
+            afficherMessage('Export impossible', 'Aucune coopérative à exporter.');
+            return;
+        }
+        
+        try {
+            const doc = new jsPDF('landscape');
+            
+            doc.setFontSize(18);
+            doc.setTextColor(46, 125, 50);
+            doc.text("Liste des Coopératives Agricoles - PDCA Collect", 148, 20, { align: 'center' });
+            
+            doc.setFontSize(11);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} - ${cooperatives.length} coopératives`, 148, 30, { align: 'center' });
+            
+            const tableData = cooperatives.map(cooperative => [
+                cooperative.nom_cooperative,
+                cooperative.nom_president,
+                cooperative.nombre_adherents,
+                cooperative.dateCreation,
+                cooperative.fax_cooperative || '',
+                cooperative.tel_president,
+                cooperative.fonctionnelle,
+                cooperative.conformite_loi_112_12,
+                cooperative.commune_id,
+                cooperative.genre === 'm' ? 'Homme' : 'Femme',
+                cooperative.filiere,
+                '___________________' // Signature vide pour manuscrite
+            ]);
+            
+            const headers = [['Nom Coop', 'Président', 'Adhérents', 'Date Création', 'Fax', 'Tél Président', 
+                             'Fonctionnelle', 'Conformité Loi', 'Commune ID', 'Genre', 'Filière', 'Signature']];
+            
+            doc.autoTable({
+                startY: 40,
+                head: headers,
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [46, 125, 50] },
+                styles: { fontSize: 8, cellPadding: 2 },
+                margin: { left: 10, right: 10 }
+            });
+            
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${i} sur ${pageCount} - PDCA Collect`, 148, doc.internal.pageSize.height - 10, { align: 'center' });
+            }
+            
+            const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            doc.save(`cooperatives_pdca_${date}.pdf`);
+            
+            afficherMessage('Export PDF réussi', `${cooperatives.length} coopératives exportées.`);
+            
+        } catch (error) {
+            console.error('Erreur export PDF:', error);
+            afficherMessage('Erreur', 'Impossible d\'exporter en PDF.');
+        }
     }
     
     // Événements
-    btnAjouter.addEventListener('click', ajouterAgriculteur);
-    btnExporterCSV.addEventListener('click', exporterCSV);
-    btnExporterWord.addEventListener('click', exporterWord);
-    btnExporterPDF.addEventListener('click', exporterPDF);
-    btnEffacer.addEventListener('click', effacerFormulaire);
+    btnAgriculteur.addEventListener('click', () => changerMode('agriculteur'));
+    btnCooperative.addEventListener('click', () => changerMode('cooperative'));
+    
+    // Agriculteurs
+    btnAjouterAgriculteur.addEventListener('click', ajouterAgriculteur);
+    btnExporterCSVAgriculteur.addEventListener('click', exporterCSVAgriculteur);
+    btnExporterWordAgriculteur.addEventListener('click', exporterWordAgriculteur);
+    btnExporterPDFAgriculteur.addEventListener('click', exporterPDFAgriculteur);
+    btnEffacerAgriculteur.addEventListener('click', effacerFormulaireAgriculteur);
+    
+    // Coopératives
+    btnAjouterCooperative.addEventListener('click', ajouterCooperative);
+    btnExporterCSVCooperative.addEventListener('click', exporterCSVCooperative);
+    btnExporterWordCooperative.addEventListener('click', exporterWordCooperative);
+    btnExporterPDFCooperative.addEventListener('click', exporterPDFCooperative);
+    btnEffacerCooperative.addEventListener('click', effacerFormulaireCooperative);
     
     modalClose.addEventListener('click', function() {
         modal.style.display = 'none';
     });
     
-    // Fermer la modal en cliquant à l'extérieur
     window.addEventListener('click', function(event) {
         if (event.target === modal) {
             modal.style.display = 'none';
         }
     });
     
-    // Exposer les fonctions globalement pour les boutons dans le tableau
+    // Exposer les fonctions globalement
     window.app = {
-        modifier: modifierAgriculteur,
-        supprimer: supprimerAgriculteur
+        modifierAgriculteur: modifierAgriculteur,
+        supprimerAgriculteur: supprimerAgriculteur,
+        modifierCooperative: modifierCooperative,
+        supprimerCooperative: supprimerCooperative
     };
     
-    // Initialiser l'application
+    // Initialiser
     chargerDonnees();
-    mettreAJourStatut('PDCA Collect - Prêt à saisir des données');
+    mettreAJourStatut('PDCA Collect initialisé');
     
     console.log('Application PDCA Collect initialisée avec succès!');
 });
