@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 PDCA Collect - Saisie Agriculteurs</title>
+    <title>📋 PDCA Collect - Gestion Agricole</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -15,9 +15,21 @@
             <p class="subtitle">Système de collecte des données agricoles</p>
         </header>
 
-        <!-- Formulaire -->
-        <section class="form-section">
-            <h2><i class="fas fa-edit"></i> Formulaire d'inscription</h2>
+        <!-- Sélection du type -->
+        <section class="type-section">
+            <div class="type-selector">
+                <button id="btnAgriculteur" class="type-btn type-active">
+                    <i class="fas fa-user"></i> Agriculteurs
+                </button>
+                <button id="btnCooperative" class="type-btn">
+                    <i class="fas fa-users"></i> Coopératives
+                </button>
+            </div>
+        </section>
+
+        <!-- Formulaire Agriculteur -->
+        <section id="formAgriculteur" class="form-section active-form">
+            <h2><i class="fas fa-edit"></i> Formulaire d'inscription - Agriculteurs</h2>
             
             <form id="agriculteurForm">
                 <div class="form-grid">
@@ -98,21 +110,127 @@
                     </div>
                 </div>
                 
-                <!-- Boutons -->
+                <!-- Boutons Agriculteur -->
                 <div class="form-buttons">
-                    <button type="button" id="btnAjouter" class="btn btn-primary">
+                    <button type="button" id="btnAjouterAgriculteur" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Ajouter Agriculteur
                     </button>
-                    <button type="button" id="btnExporterCSV" class="btn btn-secondary">
-                        <i class="fas fa-file-csv"></i> Exporter CSV
+                    <button type="button" id="btnExporterCSVAgriculteur" class="btn btn-secondary">
+                        <i class="fas fa-file-csv"></i> Exporter CSV Agriculteurs
                     </button>
-                    <button type="button" id="btnExporterWord" class="btn btn-secondary" style="background-color: #2b5797;">
-                        <i class="fas fa-file-word"></i> Exporter Word
+                    <button type="button" id="btnExporterWordAgriculteur" class="btn btn-secondary" style="background-color: #2b5797;">
+                        <i class="fas fa-file-word"></i> Exporter Word Agriculteurs
                     </button>
-                    <button type="button" id="btnExporterPDF" class="btn btn-secondary" style="background-color: #f40f02;">
-                        <i class="fas fa-file-pdf"></i> Exporter PDF
+                    <button type="button" id="btnExporterPDFAgriculteur" class="btn btn-secondary" style="background-color: #f40f02;">
+                        <i class="fas fa-file-pdf"></i> Exporter PDF Agriculteurs
                     </button>
-                    <button type="button" id="btnEffacer" class="btn btn-danger">
+                    <button type="button" id="btnEffacerAgriculteur" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Effacer Formulaire
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Formulaire Coopérative -->
+        <section id="formCooperative" class="form-section">
+            <h2><i class="fas fa-edit"></i> Formulaire d'inscription - Coopératives</h2>
+            
+            <form id="cooperativeForm">
+                <div class="form-grid">
+                    <!-- Colonne 1 -->
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="nom_cooperative">Nom Coopérative *</label>
+                            <input type="text" id="nom_cooperative" placeholder="Ex: Coopérative Test" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nom_president">Nom Président *</label>
+                            <input type="text" id="nom_president" placeholder="Ex: Président Coopérative" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nombre_adherents">Nombre d'adhérents *</label>
+                            <input type="number" id="nombre_adherents" placeholder="Ex: 34" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dateCreation">Date de création *</label>
+                            <input type="text" id="dateCreation" placeholder="JJ/MM/AAAA (Ex: 03/09/1980)" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fax_cooperative">Fax Coopérative</label>
+                            <input type="text" id="fax_cooperative" placeholder="Ex: 6554323345">
+                        </div>
+                    </div>
+                    
+                    <!-- Colonne 2 -->
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="tel_president">Téléphone Président *</label>
+                            <input type="text" id="tel_president" placeholder="Ex: 655443345" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fonctionnelle">Fonctionnelle *</label>
+                            <select id="fonctionnelle" required>
+                                <option value="OUI">OUI</option>
+                                <option value="NON">NON</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="conformite_loi_112_12">Conformité Loi 112-12 *</label>
+                            <select id="conformite_loi_112_12" required>
+                                <option value="OUI">OUI</option>
+                                <option value="NON">NON</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="commune_id_coop">ID Commune *</label>
+                            <input type="text" id="commune_id_coop" placeholder="Ex: 303" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Genre *</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="genre_coop" value="m" checked>
+                                    <span class="radio-custom"></span>
+                                    Homme (m)
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="genre_coop" value="f">
+                                    <span class="radio-custom"></span>
+                                    Femme (f)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="filiere">Filière *</label>
+                            <input type="text" id="filiere" placeholder="Ex: 15" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Boutons Coopérative -->
+                <div class="form-buttons">
+                    <button type="button" id="btnAjouterCooperative" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter Coopérative
+                    </button>
+                    <button type="button" id="btnExporterCSVCooperative" class="btn btn-secondary">
+                        <i class="fas fa-file-csv"></i> Exporter CSV Coopératives
+                    </button>
+                    <button type="button" id="btnExporterWordCooperative" class="btn btn-secondary" style="background-color: #2b5797;">
+                        <i class="fas fa-file-word"></i> Exporter Word Coopératives
+                    </button>
+                    <button type="button" id="btnExporterPDFCooperative" class="btn btn-secondary" style="background-color: #f40f02;">
+                        <i class="fas fa-file-pdf"></i> Exporter PDF Coopératives
+                    </button>
+                    <button type="button" id="btnEffacerCooperative" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Effacer Formulaire
                     </button>
                 </div>
@@ -120,7 +238,7 @@
         </section>
 
         <!-- Liste des agriculteurs -->
-        <section class="list-section">
+        <section id="listAgriculteur" class="list-section active-list">
             <h2><i class="fas fa-list"></i> Agriculteurs Saisis (<span id="countAgriculteurs">0</span>)</h2>
             
             <div class="table-container">
@@ -135,18 +253,50 @@
                             <th>Téléphone</th>
                             <th>Commune</th>
                             <th>Douar</th>
-                            <th>Signature</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody">
+                    <tbody id="tableBodyAgriculteurs">
                         <!-- Les lignes seront ajoutées ici par JavaScript -->
                     </tbody>
                 </table>
             </div>
             
             <div class="table-info">
-                <p id="tableMessage">Aucun agriculteur saisi pour le moment.</p>
+                <p id="tableMessageAgriculteurs">Aucun agriculteur saisi pour le moment.</p>
+            </div>
+        </section>
+
+        <!-- Liste des coopératives -->
+        <section id="listCooperative" class="list-section">
+            <h2><i class="fas fa-list"></i> Coopératives Saisies (<span id="countCooperatives">0</span>)</h2>
+            
+            <div class="table-container">
+                <table id="cooperativesTable">
+                    <thead>
+                        <tr>
+                            <th>Nom Coopérative</th>
+                            <th>Nom Président</th>
+                            <th>Nbr Adhérents</th>
+                            <th>Date Création</th>
+                            <th>Fax</th>
+                            <th>Tél Président</th>
+                            <th>Fonctionnelle</th>
+                            <th>Conformité Loi</th>
+                            <th>Commune ID</th>
+                            <th>Genre</th>
+                            <th>Filière</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBodyCooperatives">
+                        <!-- Les lignes seront ajoutées ici par JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-info">
+                <p id="tableMessageCooperatives">Aucune coopérative saisie pour le moment.</p>
             </div>
         </section>
 
@@ -154,11 +304,11 @@
         <footer class="footer">
             <div class="status-bar">
                 <p id="statusMessage">
-                    <i class="fas fa-info-circle"></i> Prêt à saisir des données
+                    <i class="fas fa-info-circle"></i> PDCA Collect - Prêt à saisir des données
                 </p>
             </div>
             <div class="instructions">
-                <p><i class="fas fa-lightbulb"></i> Exportez les données en CSV, Word ou PDF. Le système conserve les données hors ligne.</p>
+                <p><i class="fas fa-lightbulb"></i> Sélectionnez le type (Agriculteur/Coopérative) et exportez les données en CSV, Word ou PDF.</p>
             </div>
         </footer>
     </div>
